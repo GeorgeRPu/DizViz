@@ -35,7 +35,7 @@ datetime: timestamp
 location
 - city: string
 - country: string
-sentiment:
+sentiment
 - score: number (negative emotion to positive emotion)
 - magnitude: number (amount of emotion)
 labels: array of strings (5 items)
