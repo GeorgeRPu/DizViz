@@ -28,20 +28,16 @@ MHL
 
 ## Firestore Schema
 
+```
 document id: string
-
 cloud-store-uri: string
-
 datetime: timestamp
-
 location
 - city: string
 - country: string
-
 sentiment:
 - score: number (negative emotion to positive emotion)
 - magnitude: number (amount of emotion)
-
 labels: array of strings (5 items)
-
 disaster: string
+```
