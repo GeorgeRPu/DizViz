@@ -30,7 +30,9 @@ MHL
 
 ```
 document id: string
-cloud-store-uri: string
+cloud-store-uri
+- image: string
+- text: string
 datetime: timestamp
 location
 - city: string
