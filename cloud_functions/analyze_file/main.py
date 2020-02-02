@@ -2,13 +2,14 @@
 Starting point: https://cloud.google.com/functions/docs/tutorials/ocr#processing_images
 # """
 
-from google.cloud import firestore, language, storage, vision
+from google.cloud import firestore, language, storage, vision, automl
 
 db = firestore.Client()
 disaster_docs = db.collection('disaster-docs')
 language_client = language.LanguageServiceClient()
 storage_client = storage.Client()
 vision_client = vision.ImageAnnotatorClient()
+automl_client = automl.AutoMlClient()
 
 
 def validate_message(message, param):
@@ -33,6 +34,7 @@ def process_file(file, context):
 
     if name.split('.')[-1] in {'jfif', 'jpeg', 'png'}:
         get_labels_landmarks(bucket, name)
+        get_Disasters(bucket, name)
         print(f'Image file {name} processed.')
     elif name.split('.')[-1] == 'txt':
         blob = storage_client.get_bucket(bucket).get_blob(name)
@@ -73,6 +75,29 @@ def get_labels_landmarks(bucket, filename):
     doc.update({'labels': labels, 'landmarks': landmarks})
     print(f'After update: {doc.get().to_dict()}')
 
+
+def  get_disaster()bucket, filename):
+    project_id = "swamphacksvi-266915"
+    model_id = "ICN6150171066523189248"
+
+    uri = f'gs://{bucket}/{filename}'
+    prediction_client = automl.PredictionServiceClient(uri)
+
+    model_full_id = prediction_client.model_path(project_id, "us-central1", model_id)
+
+    image = automl.types.GcsSource(uri)
+
+    payload = automl.types.ExamplePayload(image=image)
+
+    params = {"score_threshold": "0.8"}
+
+    response = prediction_client.predict(model_full_id, payload, params)
+
+    print("Prediction Results: ")
+
+    for result in response.payload:
+        print("Predicted class name: {}".format(result.display_name))
+        print("Predicted class score: {}".format(result.classification.score))
 
 def get_sentiment(bucket, filename):
     """Uses Google Natural Language API to get text sentiment. Writes to
