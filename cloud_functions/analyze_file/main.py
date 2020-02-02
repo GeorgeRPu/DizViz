@@ -32,9 +32,9 @@ def process_file(file, context):
     bucket = validate_message(file, 'bucket')
     name = validate_message(file, 'name')
 
-    if name.split('.')[-1] in {'jfif', 'jpeg', 'png'}:
+    if name.split('.')[-1] in {'jfif', 'jpeg', 'jpg', 'png'}:
         get_labels_landmarks(bucket, name)
-        get_Disasters(bucket, name)
+        get_disaster(bucket, name)
         print(f'Image file {name} processed.')
     elif name.split('.')[-1] == 'txt':
         blob = storage_client.get_bucket(bucket).get_blob(name)
@@ -76,28 +76,28 @@ def get_labels_landmarks(bucket, filename):
     print(f'After update: {doc.get().to_dict()}')
 
 
-def  get_disaster()bucket, filename):
+def get_disaster(bucket, filename):
     project_id = "swamphacksvi-266915"
     model_id = "ICN6150171066523189248"
 
-    uri = f'gs://{bucket}/{filename}'
-    prediction_client = automl.PredictionServiceClient(uri)
+    prediction_client = automl.PredictionServiceClient()
 
     model_full_id = prediction_client.model_path(project_id, "us-central1", model_id)
-
-    image = automl.types.GcsSource(uri)
-
+    bucket = storage_client.bucket(bucket)
+    blob = bucket.blob(filename)
+    image = automl.types.Image(image_bytes=blob.download_as_string())
     payload = automl.types.ExamplePayload(image=image)
-
     params = {"score_threshold": "0.8"}
-
     response = prediction_client.predict(model_full_id, payload, params)
 
-    print("Prediction Results: ")
+    disasters = [result.display_name for result in response.payload]
+    print("Prediction Results: ", disasters)
 
-    for result in response.payload:
-        print("Predicted class name: {}".format(result.display_name))
-        print("Predicted class score: {}".format(result.classification.score))
+    doc_id = filename.split('.')[0]
+    doc = disaster_docs.document(doc_id)
+    doc.update({'disaster': disasters})
+    print(f'After update: {doc.get().to_dict()}')
+
 
 def get_sentiment(bucket, filename):
     """Uses Google Natural Language API to get text sentiment. Writes to
@@ -106,7 +106,6 @@ def get_sentiment(bucket, filename):
     uri = f'gs://{bucket}/{filename}'
     document = language.types.Document(
         gcs_content_uri=uri,
-        language='en',
         type=language.enums.Document.Type.PLAIN_TEXT,
     )
 
