@@ -1,4 +1,4 @@
-# swamphacks-VI
+# DizViz
 
 ## Challenges
 
@@ -34,13 +34,15 @@ cloud-store-uri
 - image: string
 - text: string
 datetime: timestamp
+disaster: array of string
+landmarks: array of strings
 location
 - city: string
 - country: string
 sentiment
 - score: number (negative emotion to positive emotion)
 - magnitude: number (amount of emotion)
-labels: array of strings (5 items)
+labels: array of strings
 disaster: string
 ```
 

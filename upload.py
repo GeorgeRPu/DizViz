@@ -26,7 +26,7 @@ else:
 
 data = {
     'datetime': timestamp,
-    'disaster': '',
+    'disaster': [],
     'labels': [],
     'landmarks': [],
     'location': location,
