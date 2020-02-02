@@ -1,7 +1,7 @@
 """Analyzes file using Google's ML APIs and records results in firestore
-
 Starting point: https://cloud.google.com/functions/docs/tutorials/ocr#processing_images
-"""
+# """
+
 from google.cloud import firestore, language, storage, vision
 
 db = firestore.Client()
@@ -36,8 +36,8 @@ def process_file(file, context):
         print(f'Image file {name} processed.')
     elif name.split('.')[-1] == 'txt':
         blob = storage_client.get_bucket(bucket).get_blob(name)
-        contents = blob.download_as_string().lower()
-        get_sentiment(contents, name)
+        contents = blob.download_as_string().decode('utf-8').lower()
+        get_sentiment(bucket, name)
         find_location(contents, name)
         print(f'Text file {name} processed.')
     else:
@@ -61,27 +61,28 @@ def get_labels_landmarks(bucket, filename):
                         f'https://cloud.google.com/apis/design/errors')
 
     labels = response.label_annotations
-    labels = (label.description for label in labels)
-    print('Labels:', *labels)
+    labels = [label.description for label in labels]
+    print('Labels:', labels)
 
     landmarks = response.landmark_annotations
-    landmarks = (landmark.description for landmark in landmarks)
-    print('Landmarks:', *labels)
+    landmarks = [landmark.description for landmark in landmarks]
+    print('Landmarks:', landmarks)
 
     doc_id = filename.split('.')[0]
     doc = disaster_docs.document(doc_id)
-    doc.set({'labels': list(labels), 'landmarks': list(landmarks)}, merge=True)
-    print(f'After set: {doc.get().to_dict()}')
+    doc.update({'labels': labels, 'landmarks': landmarks})
+    print(f'After update: {doc.get().to_dict()}')
 
 
 def get_sentiment(bucket, filename):
     """Uses Google Natural Language API to get text sentiment. Writes to
     firestore.
     """
+    uri = f'gs://{bucket}/{filename}'
     document = language.types.Document(
-        gcs_content_uri=f'gs://{bucket}/{filename}',
+        gcs_content_uri=uri,
         language='en',
-        type=language.enums.PLAIN_TEXT,
+        type=language.enums.Document.Type.PLAIN_TEXT,
     )
 
     response = language_client.analyze_sentiment(document, encoding_type='UTF32')
@@ -89,10 +90,10 @@ def get_sentiment(bucket, filename):
     print(f'Sentiment score: {sentiment.score}')
     print(f'Sentiment magnitude: {sentiment.magnitude}')
 
-    for sentence in response.sentences:
-        print(f'Sentence text: {sentence.text.content}'.format(sentence.text.content))
-        print(f'Sentence sentiment score: {sentence.sentiment.score}')
-        print(f'Sentence sentiment magnitude: {sentence.sentiment.magnitude}')
+    doc_id = filename.split('.')[0]
+    doc = disaster_docs.document(doc_id)
+    doc.update({'sentiment': {'score': sentiment.score, 'magnitude': sentiment.magnitude}})
+    print(f'After update: {doc.get().to_dict()}')
 
 
 locations = {
@@ -101,19 +102,23 @@ locations = {
     ('hong kong', "people's republic of china"),
     ('tokyo', 'japan'),
     ('london', 'united kingdom'),
-    ('canberra', 'australia')
+    ('canberra', 'australia'),
+    ('paris', 'france')
 }
 
 
 def find_location(contents, filename):
     """Matches text against known list of cities and writes match to firestore.
     """
+    match = False
     for city, country in locations:
         if city in contents:
             print(f'Found {city}, {country} in {filename}')
             doc_id = filename.split('.')[0]
-            doc = disaster_docs.get(doc_id)
-            doc.update({'location:', {'city': city, 'country': country}})
+            doc = disaster_docs.document(doc_id)
+            doc.update({'location': {'city': city, 'country': country}})
+            match = True
             break
 
-    print(f'No city in {locations} found.')
+    if not match:
+        print(f'No city in {locations} found.')

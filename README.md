@@ -43,3 +43,8 @@ sentiment
 labels: array of strings (5 items)
 disaster: string
 ```
+
+## Adding Files to Storage
+
+Use `upload.py` to add any image file `name.img_ext` and associated text `name.txt` (`name` *must* be the same for both files) to cloud storage.
+It also creates an entry in firestore which are populated by cloud functions.
