@@ -1,30 +1,15 @@
 # DizViz
 
-## Challenges
+First responders have an incredibly dangerous job. One reasons is the difficulty of acquiring real-time knowledge of disasters and emergencies as they happen. At the same time, 81% of the US population owns a smartphone, enabling them to photograph or even live stream events and them post to social media in seconds. Our solution is to automatically scrape images from the web and process them using AI. After extracting useful features from the data, we cluster recent images based on location, content, etc. Once enough images are found, they are converted into a 3D model using photogrammetry. This model can be viewed using a VR headset.
 
-Real truck
-- Most technically impressive, bonus if serverless (Airpods)
+Made at SwampHacks VI: https://devpost.com/software/dizviz. Won JPMorgan Chase - Best Hack for Disaster Relief!
 
-Carnival
-- Innovation across the Guest Journey (Raspberry Pi)
+## Todo
 
-Fracture
-- Photography/Digital Image Challenge (backback, $150 gift card, Airpods)
-- Best use of ARKit (same)
-
-Infinite Energy
-- Best Hack (electronics kit + tote + coffee cup + case + accessories)
-
-Infotech
-- Most innovative use of a public dataset (speakers)
-
-JPMorgan
-- Best Hack for Disaster Relief and Recovery (wireless headphones)
-
-MHL
-- Best use of Google Cloud (Google Home Mini)
-- Best use of UIPath (backpack)
-- 1, 2, 3, Organizer choice ($$$)
+- [ ] Web scraper
+- [x] Processing pipeline
+- [ ] Automatic clustering
+- [ ] Photogrammetry in the cloud?
 
 ## Firestore Schema
 
@@ -48,5 +33,5 @@ disaster: string
 
 ## Adding Files to Storage
 
-Use `upload.py` to add any image file `name.img_ext` and associated text `name.txt` (`name` *must* be the same for both files) to cloud storage.
+Use `upload.py` to add any image file `<name>.img_ext` and associated text `name.txt` (`<name>` *must* be the same for both files) to cloud storage.
 It also creates an entry in firestore which are populated by cloud functions.
